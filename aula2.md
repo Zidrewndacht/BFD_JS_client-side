@@ -155,7 +155,7 @@ O código HTML a seguir corresponde ao JavaScript apresentado acima (para ambos 
         <div class="wrapper">
             <h1>Gerador de tabuada</h1>
             <label>Valor tabuada:</label>
-            <input type="number" id="valor-tabuada" value="1"></input>
+            <input type="number" id="valor-tabuada" value="1">
             <button class="calcula-btn" id="cria-tab">Gerar</button>
             <button class="calcula-btn" id="cria-todas">Gerar 2 a 10</button>
             <div id="result-wrapper"> Resultados aparecerão aqui. </div>
@@ -344,11 +344,11 @@ Exibir a página acima no navegador normalmente colocaria todas as calculadoras 
 ```javascript
 function seleciona(aba){
     //Primeiro des-seleciona todas as abas:
-    var lista = document.getElementsByClassName("wrapper"); /*encontra cada uma das abas*/
-    for (var i = 0; i < lista.length; i++) { /*para cada uma das abas:*/
+    const lista = document.getElementsByClassName("wrapper"); /*encontra cada uma das abas*/
+    lista.forEach((wrapper, i) => {
+        wrapper.style.display = "none";
         /* Configura exibição do wrapper de conteúdo como "none", escondendo o elemento: */
-        document.getElementById("wrapper-" + i).style.display="none"; 
-/* Remove classe 'ativa' do botão. Esta classe será utilizada no CSS para que o estilo do botão selecionado seja diferente dos outros botões. */
+        /* Remove classe 'ativa' do botão. Esta classe será utilizada no CSS para que o estilo do botão selecionado seja diferente dos outros botões. */
         document.getElementById("btn-" + i).classList.remove("ativa");
     }
 
@@ -379,3 +379,84 @@ Por fim, para garantir que a primeira aba venha selecionada ao carregar a págin
 ```javascript
 seleciona(0);   //inicia com primeira aba selecionada;
 ```
+
+# Arrow Functions e a Sintaxe Moderna de Callbacks
+
+As **arrow functions** (funções de flecha) são uma forma mais concisa de escrever funções em JavaScript, introduzidas no padrão ES6 (2015). Elas são especialmente úteis quando precisamos passar funções como argumento para outras funções — o que chamamos de **callbacks**.
+
+A sintaxe básica substitui a palavra-chave `function` por uma "flecha" (`=>`) entre os parâmetros e o corpo da função:
+
+```javascript
+// Função tradicional:
+function soma(a, b) {
+    return a + b;
+}
+
+// Arrow function equivalente:
+const soma = (a, b) => {
+    return a + b;
+};
+```
+
+Quando o corpo da função tem **apenas uma linha** com `return`, podemos simplificar ainda mais, removendo as chaves e o `return`:
+
+```javascript
+const soma = (a, b) => a + b;
+```
+
+Se a função tem **apenas um parâmetro**, os parênteses também são opcionais:
+
+```javascript
+const dobro = x => x * 2;
+```
+
+Se a função **não tem parâmetros**, usamos parênteses vazios:
+
+```javascript
+const saudacao = () => "Olá!";
+```
+
+## Substituindo a "gambiarra" do addEventListener
+
+Na seção anterior sobre a criação de abas, precisamos passar um parâmetro para a função `seleciona()` dentro do `addEventListener`. Como o `addEventListener` espera receber uma **referência a uma função** (e não o resultado da execução de uma função), usamos uma função anônima tradicional como intermediária:
+
+```javascript
+// Forma anterior (funciona, mas é verbosa):
+document.getElementById("btn-0").addEventListener("click", function(){ seleciona("0") });
+document.getElementById("btn-1").addEventListener("click", function(){ seleciona("1") });
+document.getElementById("btn-2").addEventListener("click", function(){ seleciona("2") });
+document.getElementById("btn-3").addEventListener("click", function(){ seleciona("3") });
+```
+
+Com arrow functions, essa mesma lógica fica significativamente mais limpa e legível:
+
+```javascript
+// Forma moderna com arrow functions:
+document.getElementById("btn-0").addEventListener("click", () => seleciona("0"));
+document.getElementById("btn-1").addEventListener("click", () => seleciona("1"));
+document.getElementById("btn-2").addEventListener("click", () => seleciona("2"));
+document.getElementById("btn-3").addEventListener("click", () => seleciona("3"));
+```
+
+O comportamento é **exatamente o mesmo**: ao clicar no botão, a arrow function é executada e, por sua vez, chama `seleciona("0")`. A diferença é puramente sintática — escrevemos menos código e a intenção fica mais clara.
+
+### Por que não podemos passar o parâmetro diretamente?
+
+```javascript
+// ⚠️ CÓDIGO INCORRETO — NÃO FAÇA ISSO:
+document.getElementById("btn-0").addEventListener("click", seleciona("0"));
+```
+
+No exemplo acima, `seleciona("0")` é **executado imediatamente** no momento em que o navegador lê essa linha. O `addEventListener` receberia o *retorno* da função (que neste caso é `undefined`), e não a função em si. Por isso precisamos da arrow function como "embrulho": ela **não executa nada agora**, apenas diz ao navegador: "quando o clique acontecer, execute isto aqui dentro".
+
+### Aplicação em loops
+
+Podemos ir além e usar um loop para criar todos os ouvintes de uma vez, sem repetir código:
+
+```javascript
+for (let i = 0; i <= 3; i++) {
+    document.getElementById("btn-" + i).addEventListener("click", () => seleciona(String(i)));
+}
+```
+
+> **Atenção:** note o uso de `let` (e não `const` ou `var`) na variável `i` do loop. A palavra-chave `let` cria um novo escopo a cada iteração do loop, o que garante que a arrow function capturará o valor correto de `i`. Se usássemos `var`, todas as funções capturariam o valor final de `i` (neste caso, `4`), resultando em um bug clássico do JavaScript.

@@ -98,102 +98,7 @@ let y = x + f(a+b).toString();
 
 Portanto, o uso de ponto-e-vírgula após cada comando é fortemente recomendado, e (exceto quando explicitamente especificado) será cobrado em aulas.
 
-## Regras para identificadores:
-
-Identificadores são nomes de elementos, como variáveis e funções. Os nomes são sensíveis à diferença entre maiúsculas e minúsculas e podem conter uma ou mais letras, números e/ou os caracteres `$` e `_` mas não podem começar com um número.
-
-```javascript
-//Abaixo, declaro 5 variáveis diferentes e as inicializo com valores diferentes.
-let abc=8; let ab1=1; let _ab1=5; let Ab1=3; let AB1=7; 
-```
-
-Há nomes reservados em JavaScript, que não podem ser utilizados para criar identificadores, pois possuem alguma função específica predefinida pela linguagem:
- 
-```text
-break       case        catch       class       const
-continue    debugger    default     delete      do
-else        export      extends     finally     for
-function    if          import      in          instanceof
-new         return      super       switch      this
-throw       try         typeof      var         void
-while       with        yield
-```
- 
-## Variáveis e tipos de dados:
-
-JavaScript suporta, dentre outros, os tipos de dados: numérico de ponto flutuante (número com vírgula), strings (sequências de caracteres) e booleanos (bit, verdadeiro/falso).
-
-Em JavaScript, variáveis (identificadores que armazenam informação) não possuem tipo predefinido, portanto podem armazenar qualquer um dos tipos de dados e o tipo pode ser alterado mesmo depois da criação da variável. 
-
-Uma das formas de criar uma variável consiste no uso da palavra-chave `let` vista nos exemplos anteriores:
-
-```javascript
-let qtd = 3;               //cria variável qtd e atribui a ela um número inteiro.
-qtd = 74548648;            //atualiza qtd, armazenando um novo número inteiro.
-let nome = "Luis Alfredo"; //cria variável nome e atribui uma string;
-let qualquer = 6.354e48;   /* cria variável chamada qualquer e atribui a ela um número em
-                              notação científica (6,354x10^48) */
-qualquer = "agora sou uma string"; //atualiza o valor de qualquer, mudando seu tipo.
-```
-
-Veremos outras formas de criar variáveis, e outros tipos de dados no futuro.
-
-## Primeiro programa:
-
-Agora que conhecemos as bases necessárias, veremos como apresentar uma mensagem ao usuário de três formas diferentes em JavaScript. Crie um arquivo `index.html` e um arquivo `scripts.js`. 
-
-Em `index.html`, escreva: 
-
-```html
-<!DOCTYPE html>
-<html lang="pt-br">
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="scripts.js" defer></script> <!-- anexa scripts.js a este arquivo HTML -->
-</head>
-
-<body>
-    <div id="placeholder">
-        <!-- Conteúdo será inserido pelo JavaScript! -->
-    </div>
-</body>
-</html>
-```
-
-Em `scripts.js`, escreva:	
-
-```javascript
-let autor = "Luis Alfredo";         //seu nome aqui.
-let mensagem1 = "Olá! Sou " + autor; //sua mensagem aqui.
-let mensagem2 = "JS pode manipular seu HTML!"; //sua mensagem aqui.
-let mensagem3 = "Estou no log do console!"; //sua mensagem aqui.
-
-/* A linha abaixo escreve sua mensagem no console do inspetor 
-de elementos do navegador */
-console.log(mensagem1);
-
-/* A linha abaixo escreve sua mensagem como um alerta pop-up no navegador. 
-Este não é um método recomendado de interação com o usuário em páginas modernas. */
-window.alert(mensagem2); 
-
-/* A linha abaixo escreve sua mensagem no div="placeholder" do HTML
-no navegador. */
-document.getElementById("placeholder").innerHTML = mensagem3; 
-
-/* Bônus: altera a cor de fundo da página. Aprenderemos mais sobre 
-manipulação de CSS via JavaScript no futuro */
-document.body.style.background = "linear-gradient(90deg, #eff 0% , #898 100% )"; 
-```
-
-Ao concluir, explore e altere este exemplo para começar a entender o comportamento da linguagem em seu navegador. Note que, embora acessar o console em um telefone celular possa não ser viável, as outras duas mensagens devem funcionar corretamente, possibilitando o teste deste exemplo mesmo sem computador.
-
----
-
 # JavaScript: Variáveis, Tipos de Dados e Operadores
-
-## Relembrando: Regras para identificadores:
 
 Identificadores são nomes de elementos, como variáveis e funções. Os nomes são sensíveis à diferença entre maiúsculas e minúsculas e podem conter uma ou mais letras, números e/ou os caracteres `$` e `_` mas não podem começar com um número.
 
@@ -328,7 +233,7 @@ NaN         //Não é número
 Para criar uma variável que armazena uma informação dos tipos indicados acima (e outros) em JavaScript, podem se utilizar os comandos `let`, `const` ou `var`.
 
 - `let` cria uma variável local, que só tem valor e significado dentro do escopo (conjunto de chaves `{ }`) em que foi criada. 
-- `const` cria uma constante local, que só tem valor e significado dentro do escopo (conjunto de chaves `{ }`) e é um valor armazenado que não pode ser alterado posteriormente.  
+- `const` cria uma constante local, que só tem valor e significado dentro do escopo (conjunto de chaves `{ }`) e é um valor armazenado que não pode ser alterado posteriormente (com ressalvas, veja a seguir)
 - `var` cria uma variável global, válida em todo o seu programa, ou, quando criada dentro de uma função, toda a sua função. O comando `var` é a forma antiga de criar variáveis na linguagem e seu uso não é mais recomendado, pois o comportamento de `var` é confuso em algumas situações, o que pode ocasionar bugs:
 
 ```javascript
@@ -347,6 +252,86 @@ Note que, acima, criar uma nova variável com o mesmo nome de uma já existente 
 Portanto, `let` permite reutilizar nomes de variáveis em escopos diferentes, e impede a tentativa de reutilizar nomes de variáveis no mesmo escopo (visto que isto pode ocasionar problemas como visto usando `var`).
 
 Também é possível, embora não recomendado, criar e utilizar variáveis não declaradas, ao simplesmente estabelecer um valor para um identificador que não foi declarado anteriormente.
+
+
+# `const` vs `let`: O que é realmente constante?
+
+No JavaScript moderno, declaramos variáveis com `let` ou `const`. A palavra-chave `var` ainda existe, mas seu uso é desencorajado por questões de escopo que podem gerar bugs difíceis de rastrear.
+
+## O que `const` faz (e o que NÃO faz)
+
+O nome `const` (abreviação de "constante") pode ser enganoso. **`const` não torna o valor imutável.** O que `const` faz é impedir que a **variável seja reatribuída** — ou seja, que você aponte o nome da variável para um valor diferente.
+
+### Com valores primitivos (números, strings, booleanos)
+
+Para valores primitivos, `const` funciona como você esperaria de uma "constante":
+
+```javascript
+const PI = 3.141592653;
+PI = 4; // ❌ ERRO! Assignment to constant variable.
+```
+
+Como números, strings e booleanos são valores simples, impedir a reatribuição efetivamente torna o valor imutável.
+
+### Com objetos e arrays:
+
+Objetos e arrays em JavaScript são **referências**. Quando você declara um objeto com `const`, o que é "constante" é a **referência** (o "endereço" que aponta para o objeto na memória), e não o conteúdo do objeto em si:
+
+```javascript
+const usuario = { nome: "Ana", idade: 25 };
+
+// ✅ ISSO FUNCIONA — estamos alterando o conteúdo do objeto:
+usuario.idade = 26;
+usuario.email = "ana@exemplo.com";
+
+// ❌ ISSO GERA ERRO — estamos tentando reatribuir a própria variável:
+usuario = { nome: "João" }; // TypeError: Assignment to constant variable.
+```
+
+O mesmo acontece com arrays:
+
+```javascript
+const numeros = [1, 2, 3];
+
+// ✅ Funciona — alteramos o conteúdo do array:
+numeros.push(4);       // agora é [1, 2, 3, 4]
+numeros[0] = 99;       // agora é [99, 2, 3, 4]
+
+// ❌ Gera erro — tentamos apontar a variável para outro array:
+numeros = [5, 6, 7];   // TypeError!
+```
+
+### Analogia
+
+Pense em `const` como uma **etiqueta colada em uma caixa**:
+
+- Você **não pode** trocar a etiqueta da caixa (reatribuição proibida).
+- Você **pode** abrir a caixa e trocar o que tem dentro (mutação permitida).
+
+## Quando usar `const` e quando usar `let`?
+
+A convenção moderna é:
+
+| Palavra-chave | Use quando... | Exemplo |
+|---|---|---|
+| `const` | A variável **nunca será reatribuída** (mesmo que seu conteúdo interno mude) | `const botao = document.getElementById("btn");` |
+| `let` | A variável **precisará receber um novo valor** em algum momento | `let contador = 0; contador++;` |
+
+### Exemplo aplicado
+
+```javascript
+// ✅ const: não vamos reatribuir a variável, apenas ler o valor dela
+const tempc = document.getElementById("entrada-tempc").value;
+
+// ✅ const: o elemento não será reatribuído, apenas teremos seu conteúdo alterado
+const resultado = document.getElementById("result-tempf");
+resultado.value = "32.0";  // Funciona! Alteramos uma propriedade do objeto.
+
+// ✅ let: o contador PRECISA ser reatribuído (incrementado)
+let multi = 1;
+multi++;
+```
+
 
 ## Operadores:
 
