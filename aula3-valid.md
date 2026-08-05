@@ -150,41 +150,47 @@ function validate(item){
 
 // Aplicando máscara automática de CPF usando Regex
 function maskCPF(){
-    let numCPF = cpf.value.replace(/\D/g, ""); // Remove tudo que não for dígito
-    
-    // Aplica a formatação XXX.XXX.XXX-XX
-    numCPF = numCPF.replace(/(\d{3})(\d)/, "$1.$2");
-    numCPF = numCPF.replace(/(\d{3})(\d)/, "$1.$2");
-    numCPF = numCPF.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    
-    cpf.value = numCPF;
-    validate(cpf); // Revalida o campo após aplicar a máscara
+    let strCPF = cpf.value;
+    if (strCPF.length == 3 || strCPF.length == 7) cpf.value += ".";
+    if (strCPF.length == 11) cpf.value += "-";
+    console.log(strCPF);
+	
+	validate(cpf);
 }
+
 
 // Algoritmo matemático para validar os dígitos verificadores do CPF
 function validateCPF(cpf){
-    if (cpf.length < 11) return false;
-    
-    // Elimina CPFs com todos os dígitos iguais (ex: 111.111.111-11)
-    if (/^(\d)\1+$/.test(cpf)) return false;
-
-    let number = cpf.substring(0,9);
-    let digits = cpf.substring(9);
-    let sum = 0;
-    
-    // Valida primeiro dígito
-    for (let i = 10; i > 1; i--) sum += number.charAt(10 - i) * i;
-    let result = (sum % 11 < 2) ? 0 : 11 - (sum % 11);
-    if (result != digits.charAt(0)) return false;
-
-    // Valida segundo dígito
-    number = cpf.substring(0,10);
+  //Para validação via Luhn: https://developers.ebanx.com/validation-rules-for-brazil/
+  var number, digits, sum, i, result, equal_digits;
+  equal_digits = 1;
+  if (cpf.length < 11)
+    return false;
+  for (i = 0; i < cpf.length - 1; i++)
+    if (cpf.charAt(i) != cpf.charAt(i + 1)) {
+      equal_digits = 0;
+      break;
+    }
+  if (!equal_digits) {
+    number = cpf.substring(0, 9);
+    digits = cpf.substring(9);
     sum = 0;
-    for (let i = 11; i > 1; i--) sum += number.charAt(11 - i) * i;
-    result = (sum % 11 < 2) ? 0 : 11 - (sum % 11);
-    if (result != digits.charAt(1)) return false;
-
+    for (i = 10; i > 1; i--)
+      sum += number.charAt(10 - i) * i;
+    result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result != digits.charAt(0))
+      return false;
+    number = cpf.substring(0, 10);
+    sum = 0;
+    for (i = 11; i > 1; i--)
+      sum += number.charAt(11 - i) * i;
+    result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result != digits.charAt(1))
+      return false;
     return true;
+  }
+  else
+    return false;
 }
 
 // Cálculo automático de idade baseado na data de nascimento
@@ -207,4 +213,9 @@ function calcularIdade() {
 pwd2.addEventListener('input', () => validate(pwd2));
 cpf.addEventListener('input', maskCPF);
 nasc.addEventListener('change', calcularIdade);
+
+// Exercício:
+//Adicione também: máscara de telefone, restrição de idade: precisa ter 18~120 anos.
+//Altere a complexidade requerida da senha.
+//Não aceite se o usuário desistir de aceitar a licença (marcar, desmarcar e marcar de volta)
 ```
