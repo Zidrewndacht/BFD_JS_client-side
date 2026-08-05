@@ -1,0 +1,47 @@
+<!DOCTYPE html> 
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Formulário elaborado</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="validate.js"></script>
+</head>
+<body>
+<!-- Lista de REGEX comuns: https://digitalfortress.tech/js/top-15-commonly-used-regex/ -->
+<form action="javascript:alert('Formulário aprovado para envio')" method="post" id="formcad">
+    <p>Dados de login:</p>
+    <label for="uid">Usuário*:</label> 	            <input type="text"     name="uid"   id="uid" pattern="[A-Za-z0-9]+" required />
+    <label for="tel">Telefone:</label>	            <input type="tel"      name="tel"   id="tel" minlength="14"  maxlength="15"/>
+    <label for="email">E-mail*:</label>	            <input type="email"    name="email" id="email" required />
+    <label for="pwd">Senha*:</label>	            <input type="password" name="pwd"   id="pwd" 
+                                                    pattern="(?=(.*[0-9]))((?=.*[A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z]))^.{8,}$" required/>
+    <label for="pwd2">Confirmar senha*:</label>     <input type="password" name="pwd2"  id="pwd2" required />
+    
+    <p>Dados pessoais e de contato:</p>
+    <label for="nome">Nome completo*:</label>       <input type="text" name="nome" id="nome" required />
+    <label for="cpf">CPF*:</label>                  <input type="text" name="cpf" id="cpf" minlength="14" maxlength="14" required/>
+
+    <label>Gênero</label>
+    <label for="gen">Masculino                      <input type="radio" name="gen" value="masc" id="masc"/></label>
+    <label for="gen">Feminino                       <input type="radio" name="gen" value="fem" id="fem"/></label>  
+    <label for="gen">Outro                          <input type="radio" name="gen" value="out" id="out"/></label>  
+
+    <label for="nasc">Data de nascimento*:</label>  <input type="date" name="nasc" id="nasc" required />
+    <label for="idade">Idade:</label>               <input type="text" name="idade" id="idade" disabled />
+    <label for="cor">Cor preferida</label>          <input type="color" name="cor" id="cor"/>
+        
+    <label for="lic">Aceito os <br/>
+        <b>Termos de uso</b> e a<br />
+        <b>Política de Privacidade</b></label>      <input type="checkbox" name="lic" id="lic" required />
+
+    <input type="reset" value="❌ Limpar"/>
+    <input type="submit" value="✔️ Enviar"/>
+</form>
+	
+</body>
+
+</html>
+
+
+

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo API ViaCEP</title>
+    <script src="scripts.js"></script>
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <form action="#">
+        <label>CEP:</label>
+        <input name="cep" type="text" id="cep" minlength="8" maxlength="9"/>
+        <input type="button" value="Buscar CEP" id="btncep" onclick="buscaCEP()">
+        <p>Endereço:</p>
+        <label>Rua:</label>
+        <input name="logradouro" type="text" id="logradouro" />
+        <label>Complemento:</label>
+        <input name="complemento" type="text" id="complemento" />
+        <label>Bairro:</label>
+        <input name="bairro" type="text" id="bairro"  />
+        <label>Cidade:</label>
+        <input name="localidade" type="text" id="localidade" />
+        <label>Estado:</label>
+        <input name="uf" type="text" id="uf" size="2" />
+        <p>Contato:</p>
+        <label>Telefone:</label>
+        <input name="ddd" type="number" id="ddd" />
+        <input name="telefone" type="tel" id="telefone" />
+      </form>
+</body>
+</html>
