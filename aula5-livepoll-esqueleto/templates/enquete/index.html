@@ -1,0 +1,16 @@
+{# <!-- "conteúdo a adicionar --> #}
+
+{% block content %}
+<h1>Qual a melhor linguagem para Web?</h1>
+<p class="subtitulo">Os resultados atualizam automaticamente a cada 3 segundos.</p>
+
+<form id="form-voto">
+    {# <!-- "conteúdo a adicionar --> #}
+
+    <button type="submit" id="btn-votar" class="btn-primary">Votar</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='enquete.js') }}" defer></script>
+{% endblock %}
