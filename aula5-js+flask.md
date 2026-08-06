@@ -37,7 +37,41 @@ livepoll_app/
 
 No arquivo `livepoll/enquete.py`, teremos duas rotas que retornam **JSON** (para o JavaScript consumir) e uma rota que retorna **HTML** (para renderizar a página inicial).
 
-*Nota: Para manter o exemplo mínimo e focado na integração JS-Flask, usaremos um dicionário em memória para armazenar os votos. Em um app real, você usaria o SQLite da Aula 4.*
+*Nota: Para manter o exemplo mínimo e focado na integração JS-Flask, usaremos um dicionário em memória para armazenar os votos. Em um app real, você usaria o SQLite da aula anterior.*
+
+### 2.1 Application Factory
+
+Como já aprendemos, criamos a fábrica da aplicação em `livepoll/__init__.py`. Configure a `secret_key` para que a sessão funcione e registre o blueprint `enquete`.
+
+<details>
+<summary><strong>Ver solução — livepoll/__init__.py</strong></summary>
+
+```python
+# livepoll/__init__.py
+import os
+from flask import Flask
+
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = os.urandom(24) # Essencial para a sessão funcionar
+    
+    from . import enquete
+    app.register_blueprint(enquete.bp)
+    
+    return app
+```
+
+</details>
+
+### 2.2 Blueprint da Enquete
+
+Crie o blueprint `enquete` com três rotas:
+1. `/` — renderiza o template inicial
+2. `/api/status` — retorna JSON com os votos atuais, quem está liderando, e se o usuário já votou (via sessão)
+3. `/api/votar` — recebe POST com a opção escolhida, valida a sessão, incrementa o voto e retorna JSON
+
+<details>
+<summary><strong>Ver solução — livepoll/enquete.py</strong></summary>
 
 ```python
 # livepoll/enquete.py
@@ -96,22 +130,7 @@ def votar():
     return jsonify({'sucesso': True, 'mensagem': 'Voto computado com sucesso!'})
 ```
 
-Não se esqueça de registrar o blueprint e configurar a `secret_key` na sua factory (`livepoll/__init__.py`):
-
-```python
-# livepoll/__init__.py
-import os
-from flask import Flask
-
-def create_app():
-    app = Flask(__name__)
-    app.secret_key = os.urandom(24) # Essencial para a sessão funcionar
-    
-    from . import enquete
-    app.register_blueprint(enquete.bp)
-    
-    return app
-```
+</details>
 
 ---
 
@@ -119,7 +138,13 @@ def create_app():
 
 O HTML exibe o formulário. O CSS define as classes que o JavaScript irá adicionar e remover dinamicamente (`.lider` e `.votado`).
 
-**`livepoll/templates/base.html`**
+### 3.1 Template Base
+
+Crie o `base.html` padrão que você já conhece, com blocos `title`, `content` e `scripts` (este último para que as páginas filhas possam injetar seus próprios arquivos JS).
+
+<details>
+<summary><strong>Ver solução — livepoll/templates/base.html</strong></summary>
+
 ```html
 <!doctype html>
 <html lang="pt-br">
@@ -138,7 +163,22 @@ O HTML exibe o formulário. O CSS define as classes que o JavaScript irá adicio
 </html>
 ```
 
-**`livepoll/templates/enquete/index.html`**
+</details>
+
+### 3.2 Template da Enquete
+
+Crie `livepoll/templates/enquete/index.html` estendendo o `base.html`. O formulário deve ter:
+- Três opções (python, javascript, rust) com radio buttons
+- Cada opção envolta em um `div.opcao` com atributo `data-linguagem`
+- Barras de progresso (`div.barra-fundo` > `div.barra-progresso`) com IDs no formato `barra-{linguagem}`
+- Contadores (`span.contador`) com IDs no formato `count-{linguagem}`
+- Botão de submit com id `btn-votar`
+- Parágrafo para feedback com id `mensagem-feedback`
+- Importar `enquete.js` no bloco `scripts` com o atributo `defer`
+
+<details>
+<summary><strong>Ver solução — livepoll/templates/enquete/index.html</strong></summary>
+
 ```html
 {% extends 'base.html' %}
 
@@ -172,7 +212,19 @@ O HTML exibe o formulário. O CSS define as classes que o JavaScript irá adicio
 {% endblock %}
 ```
 
-**`livepoll/static/style.css`**
+</details>
+
+### 3.3 CSS Reativo
+
+O CSS define estilos base e regras condicionais:
+- `.opcao.lider` — borda dourada, fundo amarelado e sombra para destacar quem está ganhando
+- `.lider .barra-progresso` — cor dourada na barra de progresso
+- `form.votado` — trava visualmente o formulário (radios desabilitados, botão oculto, mensagem de agradecimento via `::after`)
+- `.feedback.sucesso` e `.feedback.erro` — cores de feedback
+
+<details>
+<summary><strong>Ver solução — livepoll/static/style.css</strong></summary>
+
 ```css
 body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
 .opcao { margin-bottom: 1.5rem; padding: 1rem; border: 2px solid #ccc; border-radius: 8px; transition: all 0.3s ease; }
@@ -199,13 +251,42 @@ form.votado .btn-primary { display: none; }
 form.votado::after { content: "Obrigado por votar! Acompanhe os resultados."; display: block; text-align: center; color: #666; margin-top: 1rem; font-style: italic; }
 ```
 
+</details>
+
 ---
 
-## 4. O JavaScript: O Maestro da Integração
+## 4. JavaScript: O Maestro da Integração
 
-Aqui aplicamos **Validação**, **Fetch (POST e GET)**, **Interval**, **Timeout** e **ClassList Condicional**. Usaremos a sintaxe moderna `async/await` para lidar com as Promises do `fetch` de forma limpa.
+Aqui aplicamos **Validação**, **Fetch (POST e GET)**, **Interval**, **Timeout** e **ClassList Condicional**. Usaremos o encadeamento de `.then()` e `.catch()` para lidar com as Promises do `fetch`, exatamente como fizemos ao consumir as APIs do ViaCEP e do IBGE.
 
-**`livepoll/static/enquete.js`**
+O arquivo `livepoll/static/enquete.js` deve implementar:
+
+1. **Submit do formulário com fetch POST:**
+   - Validar que alguma opção foi selecionada (feedback via função auxiliar)
+   - Desabilitar o botão e mudar texto para "Enviando..."
+   - Enviar POST para `/api/votar` com `Content-Type: application/json` e `body: JSON.stringify({ opcao: valor })`
+   - No `.then()`: se `dados.sucesso`, adicionar classe `votado` ao form e exibir feedback; senão, exibir o erro
+   - No `.catch()`: exibir erro de conexão
+   - Em ambos os casos, reabilitar o botão
+
+2. **Função `atualizarPlacar()`:**
+   - Fetch GET para `/api/status`
+   - Iterar sobre `dados.votos` com `Object.entries()`
+   - Calcular porcentagem e atualizar `style.width` da barra e `textContent` do contador
+   - Adicionar/remover classe `lider` nos `div.opcao` baseado em `dados.lideres`
+   - Adicionar classe `votado` ao form se `dados.ja_votou` for true
+
+3. **Função auxiliar `exibirFeedback(texto, tipo)`:**
+   - Atualizar `textContent` e `className` do elemento de feedback
+   - Usar `setTimeout` para limpar a mensagem após 4 segundos
+
+4. **Ciclo de atualização:**
+   - `setInterval(atualizarPlacar, 3000)` para atualizar a cada 3 segundos
+   - Chamar `atualizarPlacar()` imediatamente ao carregar a página
+
+<details>
+<summary><strong>Ver solução — livepoll/static/enquete.js</strong></summary>
+
 ```javascript
 // Elementos do DOM
 const formVoto = document.getElementById('form-voto');
@@ -215,7 +296,7 @@ const msgFeedback = document.getElementById('mensagem-feedback');
 // ==========================================
 // 1. VALIDAÇÃO E FETCH (POST)
 // ==========================================
-formVoto.addEventListener('submit', async (e) => {
+formVoto.addEventListener('submit', (e) => {
     e.preventDefault(); // Impede o recarregamento da página (comportamento padrão do HTML)
     
     // Validação no cliente
@@ -229,16 +310,14 @@ formVoto.addEventListener('submit', async (e) => {
     btnVotar.disabled = true;
     btnVotar.textContent = "Enviando...";
 
-    try {
-        // FETCH POST: Envia o voto para a API do Flask
-        const resposta = await fetch('/api/votar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // Avisa o Flask que estamos mandando JSON
-            body: JSON.stringify({ opcao: selecionado.value })
-        });
-
-        const dados = await resposta.json();
-
+    // FETCH POST: Envia o voto para a API do Flask
+    fetch('/api/votar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // Avisa o Flask que estamos mandando JSON
+        body: JSON.stringify({ opcao: selecionado.value })
+    })
+    .then(resposta => resposta.json())
+    .then(dados => {
         if (dados.sucesso) {
             exibirFeedback(dados.mensagem, 'sucesso');
             // CLASSLIST CONDICIONAL: Trava o formulário visualmente
@@ -246,50 +325,53 @@ formVoto.addEventListener('submit', async (e) => {
         } else {
             exibirFeedback(dados.erro, 'erro');
         }
-    } catch (erro) {
-        exibirFeedback('Erro de conexão com o servidor.', 'erro');
-    } finally {
+        // Reabilita o botão após o sucesso
         btnVotar.disabled = false;
         btnVotar.textContent = "Computar Voto";
-    }
+    })
+    .catch(erro => {
+        exibirFeedback('Erro de conexão com o servidor.', 'erro');
+        // Reabilita o botão em caso de falha na rede
+        btnVotar.disabled = false;
+        btnVotar.textContent = "Computar Voto";
+    });
 });
 
 // ==========================================
 // 2. FETCH (GET) E ATUALIZAÇÃO DO DOM
 // ==========================================
-async function atualizarPlacar() {
-    try {
-        // FETCH GET: Busca o estado atual do servidor
-        const resposta = await fetch('/api/status');
-        const dados = await resposta.json();
-        
-        const total = dados.total > 0 ? dados.total : 1; // Evita divisão por zero
-        
-        // Itera sobre os votos retornados pelo Flask
-        for (const [linguagem, votos] of Object.entries(dados.votos)) {
-            const porcentagem = (votos / total) * 100;
+function atualizarPlacar() {
+    // FETCH GET: Busca o estado atual do servidor
+    fetch('/api/status')
+        .then(resposta => resposta.json())
+        .then(dados => {
+            const total = dados.total > 0 ? dados.total : 1; // Evita divisão por zero
             
-            // Atualiza a largura da barra e o texto do contador
-            document.getElementById(`barra-${linguagem}`).style.width = `${porcentagem}%`;
-            document.getElementById(`count-${linguagem}`).textContent = `${votos} votos`;
-            
-            // CLASSLIST CONDICIONAL: Destaca quem está ganhando
-            const divOpcao = document.querySelector(`.opcao[data-linguagem="${linguagem}"]`);
-            if (dados.lideres.includes(linguagem)) {
-                divOpcao.classList.add('lider');
-            } else {
-                divOpcao.classList.remove('lider');
+            // Itera sobre os votos retornados pelo Flask
+            for(let [linguagem, votos] of Object.entries(dados.votos)) {
+                const porcentagem = (votos / total) * 100;
+                
+                // Atualiza a largura da barra e o texto do contador
+                document.getElementById(`barra-${linguagem}`).style.width = `${porcentagem}%`;
+                document.getElementById(`count-${linguagem}`).textContent = `${votos} votos`;
+                
+                // CLASSLIST CONDICIONAL: Destaca quem está ganhando
+                const divOpcao = document.querySelector(`.opcao[data-linguagem="${linguagem}"]`);
+                if (dados.lideres.includes(linguagem)) {
+                    divOpcao.classList.add('lider');
+                } else {
+                    divOpcao.classList.remove('lider');
+                }
             }
-        }
 
-        // Sincroniza a trava do formulário baseada na Sessão do Flask
-        if (dados.ja_votou) {
-            formVoto.classList.add('votado');
-        }
-
-    } catch (erro) {
-        console.error("Erro ao buscar placar:", erro);
-    }
+            // Sincroniza a trava do formulário baseada na Sessão do Flask
+            if (dados.ja_votou) {
+                formVoto.classList.add('votado');
+            }
+        })
+        .catch(erro => {
+            console.error("Erro ao buscar placar:", erro);
+        });
 }
 
 // ==========================================
@@ -314,6 +396,8 @@ setInterval(atualizarPlacar, 3000);
 // Busca o estado inicial imediatamente ao carregar a página
 atualizarPlacar();
 ```
+
+</details>
 
 ---
 
