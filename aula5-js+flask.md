@@ -37,11 +37,11 @@ livepoll_app/
 
 No arquivo `livepoll/enquete.py`, teremos duas rotas que retornam **JSON** (para o JavaScript consumir) e uma rota que retorna **HTML** (para renderizar a página inicial).
 
-*Nota: Para manter o exemplo mínimo e focado na integração JS-Flask, usaremos um dicionário em memória para armazenar os votos. Em um app real, você usaria o SQLite da aula anterior.*
+*Nota: Para manter o exemplo mínimo e focado na integração JS-Flask, usaremos um dicionário em memória para armazenar os votos. Em um app real, você usaria o SQLite da Aula 4.*
 
 ### 2.1 Application Factory
 
-Como já aprendemos, criamos a fábrica da aplicação em `livepoll/__init__.py`. Configure a `secret_key` para que a sessão funcione e registre o blueprint `enquete`.
+Como já aprendemos na Aula 3, criamos a fábrica da aplicação em `livepoll/__init__.py`. Configure a `secret_key` para que a sessão funcione e registre o blueprint `enquete`.
 
 <details>
 <summary><strong>Ver solução — livepoll/__init__.py</strong></summary>
@@ -173,7 +173,6 @@ Crie `livepoll/templates/enquete/index.html` estendendo o `base.html`. O formul�
 - Barras de progresso (`div.barra-fundo` > `div.barra-progresso`) com IDs no formato `barra-{linguagem}`
 - Contadores (`span.contador`) com IDs no formato `count-{linguagem}`
 - Botão de submit com id `btn-votar`
-- Parágrafo para feedback com id `mensagem-feedback`
 - Importar `enquete.js` no bloco `scripts` com o atributo `defer`
 
 <details>
@@ -203,7 +202,6 @@ Crie `livepoll/templates/enquete/index.html` estendendo o `base.html`. O formul�
     {% endfor %}
 
     <button type="submit" id="btn-votar" class="btn-primary">Computar Voto</button>
-    <p id="mensagem-feedback" class="feedback"></p>
 </form>
 {% endblock %}
 
@@ -216,39 +214,112 @@ Crie `livepoll/templates/enquete/index.html` estendendo o `base.html`. O formul�
 
 ### 3.3 CSS Reativo
 
-O CSS define estilos base e regras condicionais:
+O CSS define estilos base e, crucialmente, regras condicionais:
 - `.opcao.lider` — borda dourada, fundo amarelado e sombra para destacar quem está ganhando
 - `.lider .barra-progresso` — cor dourada na barra de progresso
 - `form.votado` — trava visualmente o formulário (radios desabilitados, botão oculto, mensagem de agradecimento via `::after`)
-- `.feedback.sucesso` e `.feedback.erro` — cores de feedback
 
 <details>
 <summary><strong>Ver solução — livepoll/static/style.css</strong></summary>
 
 ```css
-body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-.opcao { margin-bottom: 1.5rem; padding: 1rem; border: 2px solid #ccc; border-radius: 8px; transition: all 0.3s ease; }
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.opcao {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nome {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+}
+.barra-fundo {
+  background: #eee;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+.barra-progresso {
+  background: #3498db;
+  height: 100%;
+  width: 0%;
+  transition: width 0.5s ease-out;
+}
+.lider .barra-progresso {
+  background: gold;
+}
+.contador {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.btn-primary {
+  padding: 10px 20px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+.btn-primary:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+.feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  min-height: 1.5rem;
+  text-align: center;
+}
+.feedback.sucesso {
+  color: #27ae60;
+}
+.feedback.erro {
+  color: #c0392b;
+}
+
+
+
 
 /* CLASSLIST CONDICIONAL: O JS adiciona .lider na opção que está ganhando */
-.opcao.lider { border-color: gold; background-color: #fff9e6; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-
-.nome { font-weight: bold; display: block; margin-bottom: 0.5rem; text-transform: capitalize; }
-.barra-fundo { background: #eee; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem; }
-.barra-progresso { background: #3498db; height: 100%; width: 0%; transition: width 0.5s ease-out; }
-.lider .barra-progresso { background: gold; }
-.contador { font-size: 0.9rem; color: #666; }
-
-.btn-primary { padding: 10px 20px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; width: 100%; margin-top: 1rem; }
-.btn-primary:disabled { background: #95a5a6; cursor: not-allowed; }
-
-.feedback { margin-top: 1rem; font-weight: bold; min-height: 1.5rem; text-align: center; }
-.feedback.sucesso { color: #27ae60; }
-.feedback.erro { color: #c0392b; }
+.opcao.lider {
+  border-color: gold;
+  background-color: #fff9e6;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
 
 /* CLASSLIST CONDICIONAL: Quando o formulário tem a classe 'votado', trava a interface */
-form.votado input[type="radio"] { pointer-events: none; opacity: 0.5; }
-form.votado .btn-primary { display: none; }
-form.votado::after { content: "Obrigado por votar! Acompanhe os resultados."; display: block; text-align: center; color: #666; margin-top: 1rem; font-style: italic; }
+form.votado input[type="radio"] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+form.votado .btn-primary {
+  display: none;
+}
+form.votado::after {
+  content: "Obrigado por votar! Acompanhe os resultados.";
+  display: block;
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
 ```
 
 </details>
@@ -257,16 +328,17 @@ form.votado::after { content: "Obrigado por votar! Acompanhe os resultados."; di
 
 ## 4. JavaScript: O Maestro da Integração
 
-Aqui aplicamos **Validação**, **Fetch (POST e GET)**, **Interval**, **Timeout** e **ClassList Condicional**. Usaremos o encadeamento de `.then()` e `.catch()` para lidar com as Promises do `fetch`, exatamente como fizemos ao consumir as APIs do ViaCEP e do IBGE.
+Aqui aplicamos **Validação com `setCustomValidity()`**, **Fetch (POST e GET)**, **Interval**, **Timeout** e **ClassList Condicional**. Usaremos o encadeamento de `.then()` e `.catch()` para lidar com as Promises do `fetch`, exatamente como fizemos ao consumir as APIs do ViaCEP e do IBGE.
 
 O arquivo `livepoll/static/enquete.js` deve implementar:
 
 1. **Submit do formulário com fetch POST:**
-   - Validar que alguma opção foi selecionada (feedback via função auxiliar)
+   - Validar que alguma opção foi selecionada usando `setCustomValidity()` (API nativa do HTML5)
+   - Se inválido, chamar `reportValidity()` para exibir a mensagem do navegador
    - Desabilitar o botão e mudar texto para "Enviando..."
    - Enviar POST para `/api/votar` com `Content-Type: application/json` e `body: JSON.stringify({ opcao: valor })`
-   - No `.then()`: se `dados.sucesso`, adicionar classe `votado` ao form e exibir feedback; senão, exibir o erro
-   - No `.catch()`: exibir erro de conexão
+   - No `.then()`: se `dados.sucesso`, adicionar classe `votado` ao form; senão, usar `setCustomValidity()` novamente para exibir erro
+   - No `.catch()`: exibir erro de conexão via `setCustomValidity()`
    - Em ambos os casos, reabilitar o botão
 
 2. **Função `atualizarPlacar()`:**
@@ -276,11 +348,7 @@ O arquivo `livepoll/static/enquete.js` deve implementar:
    - Adicionar/remover classe `lider` nos `div.opcao` baseado em `dados.lideres`
    - Adicionar classe `votado` ao form se `dados.ja_votou` for true
 
-3. **Função auxiliar `exibirFeedback(texto, tipo)`:**
-   - Atualizar `textContent` e `className` do elemento de feedback
-   - Usar `setTimeout` para limpar a mensagem após 4 segundos
-
-4. **Ciclo de atualização:**
+3. **Ciclo de atualização:**
    - `setInterval(atualizarPlacar, 3000)` para atualizar a cada 3 segundos
    - Chamar `atualizarPlacar()` imediatamente ao carregar a página
 
@@ -291,20 +359,24 @@ O arquivo `livepoll/static/enquete.js` deve implementar:
 // Elementos do DOM
 const formVoto = document.getElementById('form-voto');
 const btnVotar = document.getElementById('btn-votar');
-const msgFeedback = document.getElementById('mensagem-feedback');
+const primeiroRadio = document.querySelector('input[name="linguagem"]');
 
 // ==========================================
-// 1. VALIDAÇÃO E FETCH (POST)
+// 1. VALIDAÇÃO COM setCustomValidity() E FETCH (POST)
 // ==========================================
 formVoto.addEventListener('submit', (e) => {
     e.preventDefault(); // Impede o recarregamento da página (comportamento padrão do HTML)
     
-    // Validação no cliente
+    // Validação no cliente usando setCustomValidity (API nativa do HTML5)
     const selecionado = document.querySelector('input[name="linguagem"]:checked');
     if (!selecionado) {
-        exibirFeedback('Por favor, selecione uma opção antes de votar.', 'erro');
+        primeiroRadio.setCustomValidity('Por favor, selecione uma opção antes de votar.');
+        primeiroRadio.reportValidity(); // Exibe a mensagem de erro do navegador
         return;
     }
+    
+    // Limpa qualquer erro de validação anterior
+    primeiroRadio.setCustomValidity('');
 
     // Feedback visual de carregamento
     btnVotar.disabled = true;
@@ -319,18 +391,21 @@ formVoto.addEventListener('submit', (e) => {
     .then(resposta => resposta.json())
     .then(dados => {
         if (dados.sucesso) {
-            exibirFeedback(dados.mensagem, 'sucesso');
             // CLASSLIST CONDICIONAL: Trava o formulário visualmente
-            formVoto.classList.add('votado'); 
+            formVoto.classList.add('votado');
         } else {
-            exibirFeedback(dados.erro, 'erro');
+            // Usa setCustomValidity para exibir erro do servidor
+            primeiroRadio.setCustomValidity(dados.erro);
+            primeiroRadio.reportValidity();
         }
         // Reabilita o botão após o sucesso
         btnVotar.disabled = false;
         btnVotar.textContent = "Computar Voto";
     })
     .catch(erro => {
-        exibirFeedback('Erro de conexão com o servidor.', 'erro');
+        // Usa setCustomValidity para exibir erro de conexão
+        primeiroRadio.setCustomValidity('Erro de conexão com o servidor.');
+        primeiroRadio.reportValidity();
         // Reabilita o botão em caso de falha na rede
         btnVotar.disabled = false;
         btnVotar.textContent = "Computar Voto";
@@ -375,20 +450,8 @@ function atualizarPlacar() {
 }
 
 // ==========================================
-// 3. TIMEOUT E INTERVAL
+// 3. INTERVAL
 // ==========================================
-
-// Função auxiliar com TIMEOUT para limpar mensagens de feedback
-function exibirFeedback(texto, tipo) {
-    msgFeedback.textContent = texto;
-    msgFeedback.className = `feedback ${tipo}`; // Classlist condicional (cor verde ou vermelha)
-    
-    // TIMEOUT: Limpa a mensagem após 4 segundos
-    setTimeout(() => {
-        msgFeedback.textContent = '';
-        msgFeedback.className = 'feedback';
-    }, 4000);
-}
 
 // INTERVAL: Inicia o ciclo de atualização a cada 3 segundos (3000ms)
 setInterval(atualizarPlacar, 3000);
@@ -408,9 +471,10 @@ atualizarPlacar();
    flask --app livepoll run --debug
    ```
 2. Abra o navegador em `http://127.0.0.1:5000/`.
-3. **O Teste da Sessão:** Vote em uma opção. Note que o botão desaparece e os radios ficam cinzas (o JS adicionou a classe `.votado`).
-4. **O Teste do Tempo Real:** Abra a **mesma URL** em uma **aba anônima** (ou no seu celular). Vote em outra opção.
-5. Volte para a primeira aba. Em até 3 segundos, você verá a barra de progresso da outra opção crescer e, se ela ultrapassar a sua, a borda da caixa ficará dourada (`.lider`) automaticamente, sem você dar F5.
+3. **O Teste da Validação:** Tente clicar em "Computar Voto" sem selecionar nenhuma opção. O navegador exibirá a mensagem "Por favor, selecione uma opção antes de votar." (via `setCustomValidity()`).
+4. **O Teste da Sessão:** Selecione uma opção e vote. Note que o botão desaparece e os radios ficam cinzas (o JS adicionou a classe `.votado`).
+5. **O Teste do Tempo Real:** Abra a **mesma URL** em uma **aba anônima** (ou no seu celular). Vote em outra opção.
+6. Volte para a primeira aba. Em até 3 segundos, você verá a barra de progresso da outra opção crescer e, se ela ultrapassar a sua, a borda da caixa ficará dourada (`.lider`) automaticamente, sem você dar F5.
 
 ---
 
@@ -419,9 +483,9 @@ atualizarPlacar();
 | Conceito | Onde está no código? | Por que é importante? |
 | :--- | :--- | :--- |
 | **Separação de Responsabilidades** | Flask retorna JSON (`/api/status`), não HTML. | O servidor não gasta processamento renderizando Jinja2 a cada 3 segundos. Ele apenas entrega números. O JS monta a interface. |
+| **Validação Nativa** | `setCustomValidity()` e `reportValidity()` | Usa a API padrão do HTML5 em vez de criar soluções customizadas. O navegador exibe as mensagens de erro de forma consistente. |
 | **Sessão vs Interface** | `session['ja_votou']` no Flask e `formVoto.classList.add('votado')` no JS. | A interface trava visualmente (UX), mas a **verdadeira segurança** está no Flask checando a sessão antes de aceitar o POST. O JS sozinho pode ser burlado; a sessão no servidor não. |
 | **`setInterval`** | `setInterval(atualizarPlacar, 3000)` | Simula o conceito de *WebSockets* ou *Server-Sent Events* de forma simples (chamado de *Polling*). |
-| **`setTimeout`** | Limpeza da mensagem de feedback. | Melhora a UX, evitando que a tela fique poluída com mensagens antigas. |
 | **`classList` Condicional** | Adicionar/remover `.lider` e `.votado`. | Permite que o CSS cuide da estética (cores, sombras, animações), enquanto o JS cuida apenas da lógica de *quando* aplicar essas classes. |
 
 Este exemplo é o "Hello World" das **Single Page Applications (SPAs)** e dashboards interativos. Você agora possui todas as peças para construir aplicações web completas, onde o HTML é a estrutura, o CSS é a roupa, o JS é o sistema nervoso e o Flask é o cérebro.
