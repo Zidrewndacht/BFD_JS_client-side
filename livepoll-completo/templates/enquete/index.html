@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Enquete Ao Vivo{% endblock %}
+
+{% block content %}
+<h1>Qual a melhor linguagem para Web?</h1>
+<p class="subtitulo">Os resultados atualizam automaticamente a cada 3 segundos.</p>
+
+<form id="form-voto">
+    {% for lang in ['Python', 'JavaScript', 'PHP', 'Perl', 'Rust', 'C'] %}
+    <div class="opcao" data-linguagem="{{ lang }}">
+        <label>
+            <input type="radio" name="linguagem" value="{{ lang }}" required>
+            <span class="nome">{{ lang.capitalize() }}</span>
+        </label>
+        <div class="barra-fundo">
+            <div class="barra-progresso" id="barra-{{ lang }}"></div>
+        </div>
+        <span class="contador" id="count-{{ lang }}">0 votos</span>
+    </div>
+    {% endfor %}
+
+    <button type="submit" id="btn-votar" class="btn-primary">Votar</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='enquete.js') }}" defer></script>
+{% endblock %}
